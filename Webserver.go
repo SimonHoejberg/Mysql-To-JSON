@@ -93,9 +93,10 @@ func httpInsert(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Error"))
 	} else {
 		aff, err := res.RowsAffected()
+		fmt.Println(aff)
 		if err != nil {
 			return
 		}
-		w.Write([]byte(string(aff)))
+		w.Write([]byte("Success"))
 	}
 }
