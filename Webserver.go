@@ -9,8 +9,12 @@ import (
     "strings"
 )
 var db *sql.DB
-func main() {	 
-	http.HandleFunc("/", httpReq)
+var err error
+func main() {	
+	db, err = sql.Open("mysql", "test:password@tcp(localhost:3306)/test")
+	 
+	http.HandleFunc("/select/", httpSelect)
+	http.HandleFunc("/insert/", httpInsert)
 	http.ListenAndServe(":8080", nil)
 
    	db.Close()
@@ -18,7 +22,7 @@ func main() {
 
 func getJSON(queryString string) ([]byte, error) {
 
-	db, err := sql.Open("mysql", "test:password@tcp(localhost:3306)/test")
+
     
     if(err != nil){
         return []byte(""), err
@@ -69,14 +73,29 @@ func getJSON(queryString string) ([]byte, error) {
     return jsonData, nil
 }
 
-func httpReq(w http.ResponseWriter, r *http.Request) {
+func httpSelect(w http.ResponseWriter, r *http.Request) {
 	
 	query := r.URL.Path
-	query = strings.TrimPrefix(query, "/")
+	query = strings.TrimPrefix(query, "/select/")
 	message, err := getJSON(query)
 	
 	if err != nil {
-		fmt.Println("This is where it goes down ish")
+		panic(err.Error)
 	}
 	w.Write(message)
+}
+
+func httpInsert(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Path
+	query = strings.TrimPrefix(query, "/insert/")
+	res, err := db.Exec(query)
+	if err != nil {
+		w.Write([]byte("Error"))
+	} else {
+		aff, err := res.RowsAffected()
+		if err != nil {
+			return
+		}
+		w.Write([]byte(string(aff)))
+	}
 }
